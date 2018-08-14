@@ -157,16 +157,26 @@ func (p *LogProject) DeleteLogStore(name string) (err error) {
 
 // UpdateLogStore updates a logstore according by logstore name,
 // obviously we can't modify the logstore name itself.
-func (p *LogProject) UpdateLogStore(name string, ttl, shardCnt int) (err error) {
+func (p *LogProject) UpdateLogStore(name string, ttl, shardCnt int) error {
+	return p.UpdateLogStoreDetail(name, ttl, shardCnt, false, 0)
+}
+
+func (p *LogProject) UpdateLogStoreDetail(name string, ttl, shardCnt int, autoSplit bool, maxSplitShard int) (err error) {
 	type Body struct {
-		Name       string `json:"logstoreName"`
-		TTL        int    `json:"ttl"`
-		ShardCount int    `json:"shardCount"`
+		Name          string `json:"logstoreName"`
+		TTL           int    `json:"ttl"`
+		ShardCount    int    `json:"shardCount"`
+		AutoSplit     bool   `json:"autoSplit"`
+		MaxSplitShard int    `json:"maxSplitShard"`
 	}
 	store := &Body{
 		Name:       name,
 		TTL:        ttl,
 		ShardCount: shardCnt,
+	}
+	if autoSplit {
+		store.AutoSplit = autoSplit
+		store.MaxSplitShard = maxSplitShard
 	}
 	body, err := json.Marshal(store)
 	if err != nil {
