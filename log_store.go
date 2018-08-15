@@ -30,6 +30,13 @@ type LogStore struct {
 	putLogCompressType int
 }
 
+func NewLogStore(c *Client, projectName, storeName string) *LogStore {
+	return &LogStore{
+		project: convert(c, projectName),
+		Name:    storeName,
+	}
+}
+
 // Shard defines shard struct
 type Shard struct {
 	ShardID           int    `json:"shardID"`
@@ -216,10 +223,9 @@ func (s *LogStore) PutLogs(lg *LogGroup) (err error) {
 	return nil
 }
 
-
 // PostLogStoreLogs put logs into Shard logstore by hashKey.
 // The callers should transform user logs into LogGroup.
-func (s *LogStore) PostLogStoreLogs(lg *LogGroup, hashKey* string) (err error) {
+func (s *LogStore) PostLogStoreLogs(lg *LogGroup, hashKey *string) (err error) {
 	if len(lg.Logs) == 0 {
 		// empty log group or empty hashkey
 		return nil
