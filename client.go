@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
 	"sync"
 )
 
@@ -179,12 +181,31 @@ func (c *Client) GetProject(name string) (*LogProject, error) {
 
 // ListProject list all projects in specific region
 // the region is related with the client's endpoint
-func (c *Client) ListProject() (projectNames []string, err error) {
+func (c *Client) ListProject() ([]string, error) {
+	return c.ListProjectPagenation(0, 500)
+}
+
+func (c *Client) ListProjectPagenation(offset, size int) (projectNames []string, err error) {
 	h := map[string]string{
 		"x-log-bodyrawsize": "0",
 	}
 
 	uri := "/"
+	if offset > 0 || size > 0 {
+		vals := url.Values(make(map[string][]string))
+		if offset > 0 {
+			vals.Add("offset", strconv.Itoa(offset))
+		}
+		if size > 0 {
+			vals.Add("size", strconv.Itoa(size))
+		}
+		tu, err := url.Parse(uri)
+		if err != nil {
+			return nil, err
+		}
+		tu.RawQuery = vals.Encode()
+		uri = tu.String()
+	}
 	proj := convert(c, "")
 
 	type Project struct {
