@@ -47,9 +47,9 @@ type IndexKey struct {
 	IndexBaseKey
 
 	//json key
-	IndexAll bool                     `json:"index_all,omitempty"`
-	MaxDepth int                      `json:"max_depth,omitempty"`
-	JsonKeys map[string]*IndexBaseKey `json:"json_keys,omitempty"`
+	IndexAll bool                    `json:"index_all,omitempty"`
+	MaxDepth int                     `json:"max_depth,omitempty"`
+	JsonKeys map[string]IndexBaseKey `json:"json_keys,omitempty"`
 }
 
 type IndexLine struct {
