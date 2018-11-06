@@ -34,13 +34,22 @@ func (resp *GetLogsResponse) IsComplete() bool {
 }
 
 // IndexKey ...
-type IndexKey struct {
+type IndexBaseKey struct {
 	Token         []string `json:"token"` // tokens that split the log line.
 	CaseSensitive bool     `json:"caseSensitive"`
 	Type          string   `json:"type"` // text, long, double
 	DocValue      bool     `json:"doc_value,omitempty"`
 	Alias         string   `json:"alias,omitempty"`
 	Chn           bool     `json:"chn"` // parse chinese or not
+}
+
+type IndexKey struct {
+	IndexBaseKey
+
+	//json key
+	IndexAll bool                     `json:"index_all,omitempty"`
+	MaxDepth int                      `json:"max_depth,omitempty"`
+	JsonKeys map[string]*IndexBaseKey `json:"json_keys,omitempty"`
 }
 
 type IndexLine struct {
