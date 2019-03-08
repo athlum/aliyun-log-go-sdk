@@ -34,7 +34,7 @@ type LogStore struct {
 	putLogCompressType int
 }
 
-func NewLogStore(c *Client, projectName, storeName string) *LogStore {
+func NewLogStoreWithProjectName(c *Client, projectName, storeName string) *LogStore {
 	return &LogStore{
 		project: convert(c, projectName),
 		Name:    storeName,
