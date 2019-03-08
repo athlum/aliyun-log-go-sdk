@@ -78,10 +78,9 @@ func (c *Client) PutLogs(project, logstore string, lg *LogGroup) (err error) {
 	return ls.PutLogs(lg)
 }
 
-
 // PostLogStoreLogs put logs into Shard logstore by hashKey.
 // The callers should transform user logs into LogGroup.
-func (c *Client) PostLogStoreLogs(project, logstore string, lg *LogGroup, hashKey* string) (err error) {
+func (c *Client) PostLogStoreLogs(project, logstore string, lg *LogGroup, hashKey *string) (err error) {
 	ls := convertLogstore(c, project, logstore)
 	return ls.PostLogStoreLogs(lg, hashKey)
 }
@@ -199,14 +198,32 @@ func (c *Client) UpdateIndex(project, logstore string, index Index) error {
 	return ls.UpdateIndex(index)
 }
 
-// DeleteIndex ...
-func (c *Client) DeleteIndex(project, logstore string) error {
-	ls := convertLogstore(c, project, logstore)
-	return ls.DeleteIndex()
-}
-
 // GetIndex ...
 func (c *Client) GetIndex(project, logstore string) (*Index, error) {
 	ls := convertLogstore(c, project, logstore)
 	return ls.GetIndex()
+}
+
+// CreateIndexString ...
+func (c *Client) CreateIndexString(project, logstore string, index string) error {
+	ls := convertLogstore(c, project, logstore)
+	return ls.CreateIndexString(index)
+}
+
+// UpdateIndexString ...
+func (c *Client) UpdateIndexString(project, logstore string, index string) error {
+	ls := convertLogstore(c, project, logstore)
+	return ls.UpdateIndexString(index)
+}
+
+// GetIndexString ...
+func (c *Client) GetIndexString(project, logstore string) (string, error) {
+	ls := convertLogstore(c, project, logstore)
+	return ls.GetIndexString()
+}
+
+// DeleteIndex ...
+func (c *Client) DeleteIndex(project, logstore string) error {
+	ls := convertLogstore(c, project, logstore)
+	return ls.DeleteIndex()
 }

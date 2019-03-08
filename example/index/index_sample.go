@@ -16,7 +16,7 @@ func main() {
 	logstore_name := "test"
 	util.Client.DeleteLogStore(util.ProjectName, logstore_name)
 	time.Sleep(15 * 1000 * time.Millisecond)
-	err := util.Client.CreateLogStore(util.ProjectName, logstore_name, 1, 2)
+	err := util.Client.CreateLogStore(util.ProjectName, logstore_name, 1, 2, true, 16)
 	if err != nil {
 		fmt.Printf("CreateLogStore fail, err: %s", err)
 		return
@@ -30,12 +30,12 @@ func main() {
 	}
 	fmt.Printf("GetLogStore success, name: %s, ttl: %d, shardCount: %d, createTime: %d, lastModifyTime: %d\n", logstore.Name, logstore.TTL, logstore.ShardCount, logstore.CreateTime, logstore.LastModifyTime)
 	indexKeys := map[string]sls.IndexKey{
-		"col_0": sls.IndexKey{
+		"col_0": {
 			Token:         []string{" "},
 			CaseSensitive: false,
 			Type:          "long",
 		},
-		"col_1": sls.IndexKey{
+		"col_1": {
 			Token:         []string{",", ":", " "},
 			CaseSensitive: false,
 			Type:          "text",

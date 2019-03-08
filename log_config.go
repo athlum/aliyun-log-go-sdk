@@ -32,6 +32,13 @@ const (
 	MergeTypeLogstore = "logstore"
 )
 
+const (
+	TopicFormatNone         = "none"        // no topic
+	TopicFormatMachineGroup = "group_topic" // machine group's topic
+	// otherwise, file path regex.
+	// eg, file path /var/log/nginx/access.log, TopicFormat: /var/log/([^/]+)/access\.log, so topic is 'nginx'
+)
+
 var NoConfigFieldError = errors.New("no this config field")
 var InvalidTypeError = errors.New("invalid config type")
 
@@ -59,6 +66,8 @@ type InputDetail struct {
 	FilterKeys    []string `json:"filterKey"`
 	FilterRegex   []string `json:"filterRegex"`
 	TopicFormat   string   `json:"topicFormat"`
+	Separator     string   `json:"separator"`
+	AutoExtend    bool     `json:"autoExtend"`
 }
 
 func ConvertToInputDetail(detail InputDetailInterface) (*InputDetail, bool) {
@@ -186,7 +195,9 @@ func InitJSONConfigInputDetail(detail *JSONConfigInputDetail) {
 }
 
 func AddNecessaryJSONLogInputConfigField(inputConfigDetail map[string]interface{}) {
-
+	if _, ok := inputConfigDetail["timeKey"]; !ok {
+		inputConfigDetail["timeKey"] = ""
+	}
 }
 
 func ConvertToJSONConfigInputDetail(detail InputDetailInterface) (*JSONConfigInputDetail, bool) {
@@ -213,7 +224,7 @@ type DelimiterConfigInputDetail struct {
 	Separator  string   `json:"separator"`
 	Quote      string   `json:"quote"`
 	Key        []string `json:"key"`
-	TimeKey    string   `json:"timeKey,omitempty"`
+	TimeKey    string   `json:"timeKey"`
 	AutoExtend bool     `json:"autoExtend"`
 }
 
@@ -232,6 +243,10 @@ func AddNecessaryDelimiterLogInputConfigField(inputConfigDetail map[string]inter
 
 	if _, ok := inputConfigDetail["autoExtend"]; !ok {
 		inputConfigDetail["autoExtend"] = true
+	}
+
+	if _, ok := inputConfigDetail["timeKey"]; !ok {
+		inputConfigDetail["timeKey"] = ""
 	}
 }
 
@@ -291,7 +306,7 @@ func InitLocalFileConfigInputDetail(detail *LocalFileConfigInputDetail) {
 	InitCommonConfigInputDetail(&detail.CommonConfigInputDetail)
 	detail.FileEncoding = "utf8"
 	detail.MaxDepth = 100
-	detail.TopicFormat = "none"
+	detail.TopicFormat = TopicFormatNone
 	detail.Preserve = true
 	detail.DiscardUnmatch = true
 }
@@ -306,7 +321,7 @@ func AddNecessaryLocalFileInputConfigField(inputConfigDetail map[string]interfac
 	}
 
 	if _, ok := inputConfigDetail["topicFormat"]; !ok {
-		inputConfigDetail["topicFormat"] = "none"
+		inputConfigDetail["topicFormat"] = TopicFormatNone
 	}
 
 	if _, ok := inputConfigDetail["preserve"]; !ok {

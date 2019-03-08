@@ -25,10 +25,18 @@ func (c *Client) GetLogStore(project string, logstore string) (*LogStore, error)
 // CreateLogStore creates a new logstore in SLS,
 // where name is logstore name,
 // and ttl is time-to-live(in day) of logs,
-// and shardCnt is the number of shards.
-func (c *Client) CreateLogStore(project string, logstore string, ttl, shardCnt int) error {
+// and shardCnt is the number of shards,
+// and autoSplit is auto split,
+// and maxSplitShard is the max number of shard.
+func (c *Client) CreateLogStore(project string, logstore string, ttl, shardCnt int, autoSplit bool, maxSplitShard int) error {
 	proj := convert(c, project)
-	return proj.CreateLogStore(logstore, ttl, shardCnt)
+	return proj.CreateLogStore(logstore, ttl, shardCnt, autoSplit, maxSplitShard)
+}
+
+// CreateLogStoreV2 creates a new logstore in SLS
+func (c *Client) CreateLogStoreV2(project string, logstore *LogStore) error {
+	proj := convert(c, project)
+	return proj.CreateLogStoreV2(logstore)
 }
 
 // DeleteLogStore deletes a logstore according by logstore name.
@@ -42,6 +50,13 @@ func (c *Client) DeleteLogStore(project string, logstore string) (err error) {
 func (c *Client) UpdateLogStore(project string, logstore string, ttl, shardCnt int) (err error) {
 	proj := convert(c, project)
 	return proj.UpdateLogStore(logstore, ttl, shardCnt)
+}
+
+// UpdateLogStoreV2 updates a logstore according by logstore name,
+// obviously we can't modify the logstore name itself.
+func (c *Client) UpdateLogStoreV2(project string, logstore *LogStore) (err error) {
+	proj := convert(c, project)
+	return proj.UpdateLogStoreV2(logstore)
 }
 
 // ListMachineGroup returns machine group name list and the total number of machine groups.
@@ -159,6 +174,24 @@ func (c *Client) UpdateConfig(project string, config *LogConfig) (err error) {
 func (c *Client) CreateConfig(project string, config *LogConfig) (err error) {
 	proj := convert(c, project)
 	return proj.CreateConfig(config)
+}
+
+// GetConfigString returns config according by config name.
+func (c *Client) GetConfigString(project string, config string) (logConfig string, err error) {
+	proj := convert(c, project)
+	return proj.GetConfigString(config)
+}
+
+// UpdateConfigString updates a config.
+func (c *Client) UpdateConfigString(project string, configName, configDetail string) (err error) {
+	proj := convert(c, project)
+	return proj.UpdateConfigString(configName, configDetail)
+}
+
+// CreateConfigString creates a new config in SLS.
+func (c *Client) CreateConfigString(project string, config string) (err error) {
+	proj := convert(c, project)
+	return proj.CreateConfigString(config)
 }
 
 // DeleteConfig deletes a config according by config name.

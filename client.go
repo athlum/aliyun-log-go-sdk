@@ -35,6 +35,9 @@ type Error struct {
 
 // NewClientError new client error
 func NewClientError(err error) *Error {
+	if err == nil {
+		return nil
+	}
 	if clientError, ok := err.(*Error); ok {
 		return clientError
 	}
@@ -80,14 +83,10 @@ type Client struct {
 func convert(c *Client, projName string) *LogProject {
 	c.accessKeyLock.RLock()
 	defer c.accessKeyLock.RUnlock()
-	return &LogProject{
-		Name:            projName,
-		Endpoint:        c.Endpoint,
-		AccessKeyID:     c.AccessKeyID,
-		AccessKeySecret: c.AccessKeySecret,
-		SecurityToken:   c.SecurityToken,
-		UserAgent:       c.UserAgent,
-	}
+	p, _ := NewLogProject(projName, c.Endpoint, c.AccessKeyID, c.AccessKeySecret)
+	p.SecurityToken = c.SecurityToken
+	p.UserAgent = c.UserAgent
+	return p
 }
 
 // ResetAccessKeyToken reset client's access key token
@@ -237,6 +236,44 @@ func (c *Client) ListProjectPagenation(offset, size int) (projectNames []string,
 	return projectNames, err
 }
 
+// ListProjectV2 list all projects in specific region
+// the region is related with the client's endpoint
+// ref https://www.alibabacloud.com/help/doc-detail/74955.htm
+func (c *Client) ListProjectV2(offset, size int) (projects []LogProject, count, total int, err error) {
+	h := map[string]string{
+		"x-log-bodyrawsize": "0",
+	}
+
+	urlVal := url.Values{}
+	urlVal.Add("offset", strconv.Itoa(offset))
+	urlVal.Add("size", strconv.Itoa(size))
+	uri := fmt.Sprintf("/?%s", urlVal.Encode())
+	proj := convert(c, "")
+
+	type Body struct {
+		Projects []LogProject `json:"projects"`
+		Count    int          `json:"count"`
+		Total    int          `json:"total"`
+	}
+
+	r, err := request(proj, "GET", uri, h, nil)
+	if err != nil {
+		return nil, 0, 0, NewClientError(err)
+	}
+
+	defer r.Body.Close()
+	buf, _ := ioutil.ReadAll(r.Body)
+	if r.StatusCode != http.StatusOK {
+		err := new(Error)
+		json.Unmarshal(buf, err)
+		return nil, 0, 0, err
+	}
+
+	body := &Body{}
+	err = json.Unmarshal(buf, body)
+	return body.Projects, body.Count, body.Total, err
+}
+
 // CheckProjectExist check project exist or not
 func (c *Client) CheckProjectExist(name string) (bool, error) {
 	h := map[string]string{
@@ -272,5 +309,10 @@ func (c *Client) DeleteProject(name string) error {
 		return err
 	}
 	defer resp.Body.Close()
+	return nil
+}
+
+// Close the client
+func (c *Client) Close() error {
 	return nil
 }

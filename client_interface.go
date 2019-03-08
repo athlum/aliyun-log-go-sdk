@@ -43,6 +43,8 @@ type ClientInterface interface {
 	// #################### Client Operations #####################
 	// ResetAccessKeyToken reset client's access key token
 	ResetAccessKeyToken(accessKeyID, accessKeySecret, securityToken string)
+	// Close the client
+	Close() error
 
 	// #################### Project Operations #####################
 	// CreateProject create a new loghub project.
@@ -51,6 +53,10 @@ type ClientInterface interface {
 	// ListProject list all projects in specific region
 	// the region is related with the client's endpoint
 	ListProject() (projectNames []string, err error)
+	// ListProjectV2 list all projects in specific region
+	// the region is related with the client's endpoint
+	// ref https://www.alibabacloud.com/help/doc-detail/74955.htm
+	ListProjectV2(offset, size int) (projects []LogProject, count, total int, err error)
 	// CheckProjectExist check project exist or not
 	CheckProjectExist(name string) (bool, error)
 	// DeleteProject ...
@@ -61,16 +67,23 @@ type ClientInterface interface {
 	ListLogStore(project string) ([]string, error)
 	// GetLogStore returns logstore according by logstore name.
 	GetLogStore(project string, logstore string) (*LogStore, error)
-	// CreateLogStore creates a new logstore in SLS,
+	// CreateLogStore creates a new logstore in SLS
 	// where name is logstore name,
 	// and ttl is time-to-live(in day) of logs,
-	// and shardCnt is the number of shards.
-	CreateLogStore(project string, logstore string, ttl, shardCnt int) error
+	// and shardCnt is the number of shards,
+	// and autoSplit is auto split,
+	// and maxSplitShard is the max number of shard.
+	CreateLogStore(project string, logstore string, ttl, shardCnt int, autoSplit bool, maxSplitShard int) error
+	// CreateLogStoreV2 creates a new logstore in SLS
+	CreateLogStoreV2(project string, logstore *LogStore) error
 	// DeleteLogStore deletes a logstore according by logstore name.
 	DeleteLogStore(project string, logstore string) (err error)
 	// UpdateLogStore updates a logstore according by logstore name,
 	// obviously we can't modify the logstore name itself.
 	UpdateLogStore(project string, logstore string, ttl, shardCnt int) (err error)
+	// UpdateLogStoreV2 updates a logstore according by logstore name,
+	// obviously we can't modify the logstore name itself.
+	UpdateLogStoreV2(project string, logstore *LogStore) error
 	// CheckLogstoreExist check logstore exist or not
 	CheckLogstoreExist(project string, logstore string) (bool, error)
 
@@ -97,10 +110,16 @@ type ClientInterface interface {
 	CheckConfigExist(project string, config string) (ok bool, err error)
 	// GetConfig returns config according by config name.
 	GetConfig(project string, config string) (logConfig *LogConfig, err error)
+	// GetConfigString returns config according by config name.
+	GetConfigString(name string, config string) (c string, err error)
 	// UpdateConfig updates a config.
 	UpdateConfig(project string, config *LogConfig) (err error)
+	// UpdateConfigString updates a config.
+	UpdateConfigString(project string, configName, configDetail string) (err error)
 	// CreateConfig creates a new config in SLS.
 	CreateConfig(project string, config *LogConfig) (err error)
+	// CreateConfigString creates a new config in SLS.
+	CreateConfigString(project string, config string) (err error)
 	// DeleteConfig deletes a config according by config name.
 	DeleteConfig(project string, config string) (err error)
 	// GetAppliedMachineGroups returns applied machine group names list according config name.
@@ -136,7 +155,7 @@ type ClientInterface interface {
 	PutLogs(project, logstore string, lg *LogGroup) (err error)
 	// PostLogStoreLogs put logs into Shard logstore by hashKey.
 	// The callers should transform user logs into LogGroup.
-	PostLogStoreLogs(project, logstore string, lg *LogGroup, hashKey* string) (err error)
+	PostLogStoreLogs(project, logstore string, lg *LogGroup, hashKey *string) (err error)
 	// PutLogsWithCompressType put logs into logstore with specific compress type.
 	// The callers should transform user logs into LogGroup.
 	PutLogsWithCompressType(project, logstore string, lg *LogGroup, compressType int) (err error)
@@ -166,19 +185,28 @@ type ClientInterface interface {
 	// #################### Index Operations #####################
 	// CreateIndex ...
 	CreateIndex(project, logstore string, index Index) error
+	// CreateIndexString ...
+	CreateIndexString(project, logstore string, indexStr string) error
 	// UpdateIndex ...
 	UpdateIndex(project, logstore string, index Index) error
+	// UpdateIndexString ...
+	UpdateIndexString(project, logstore string, indexStr string) error
 	// DeleteIndex ...
 	DeleteIndex(project, logstore string) error
 	// GetIndex ...
 	GetIndex(project, logstore string) (*Index, error)
+	// GetIndexString ...
+	GetIndexString(project, logstore string) (string, error)
 
 	// #################### Chart&Dashboard Operations #####################
 	ListDashboard(project string, dashboardName string, offset, size int) (dashboardList []string, count, total int, err error)
 	GetDashboard(project, name string) (dashboard *Dashboard, err error)
+	GetDashboardString(project, name string) (dashboard string, err error)
 	DeleteDashboard(project, name string) error
 	UpdateDashboard(project string, dashboard Dashboard) error
+	UpdateDashboardString(project string, dashboardName, dashboardStr string) error
 	CreateDashboard(project string, dashboard Dashboard) error
+	CreateDashboardString(project string, dashboardStr string) error
 	GetChart(project, dashboardName, chartName string) (chart *Chart, err error)
 	DeleteChart(project, dashboardName, chartName string) error
 	UpdateChart(project, dashboardName string, chart Chart) error
@@ -194,5 +222,7 @@ type ClientInterface interface {
 	UpdateAlert(project string, alert *Alert) error
 	DeleteAlert(project string, alertName string) error
 	GetAlert(project string, alertName string) (*Alert, error)
-	ListAlert(project string, alertName string, offset, size int) (alerts []string, total int, count int, err error)
+	DisableAlert(project string, alertName string) error
+	EnableAlert(project string, alertName string) error
+	ListAlert(project, alertName, dashboard string, offset, size int) (alerts []*Alert, total int, count int, err error)
 }
